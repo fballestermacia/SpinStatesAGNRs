@@ -12,26 +12,32 @@ from datetime import timedelta
 
 if __name__ == '__main__':
     cc = 0.142
-    width1 = 7
-    length1 = 5
+    width1 =9
+    length1 = 20
     
-    width2 = 7
+    width2 =7
     length2 = 5
     
     t=-1
     U=1.2*np.abs(t)#1.2*np.abs(t)
     
-    matxyzs,xmats,ymats =  junction_xyz(width1, length1, width2, length2, cc, centered = False)
+    matxyzs,xmats,ymats =  junction_xyz(width1, length1, width2, length2, cc, centered = True, three=True)
     
-    delpos = 38
+    '''delposes = np.arange(length2*2)+width1*length1*2
+    for delpos in delposes[::-1]:
+        matxyzs = np.delete(matxyzs,delpos, axis = 0)
+        xmats = np.delete(xmats,delpos)
+        ymats = np.delete(ymats,delpos)'''
+        
+    '''delpos = 211
     matxyzs = np.delete(matxyzs,delpos, axis = 0)
     xmats = np.delete(xmats,delpos)
     ymats = np.delete(ymats,delpos)
     
-    delpos = 100
+    delpos = 210
     matxyzs = np.delete(matxyzs,delpos, axis = 0)
     xmats = np.delete(xmats,delpos)
-    ymats = np.delete(ymats,delpos)
+    ymats = np.delete(ymats,delpos)'''
     #matxyz,xmat,ymat =  GrapheGENEHaiku(length1,cc)
     
     Htb = TB_From_XYZ(0,t,cc,matxyzs)
@@ -48,8 +54,11 @@ if __name__ == '__main__':
     nupinAVG = 0.5*np.zeros(nel)
     ndowninAVG = 0.5*np.zeros(nel)
     
-    nupinAVG[width1:width1//2*width1+1:2*width1] = 1
-    ndowninAVG[-width2//2*width2:-width2:2*width2] = 1
+    '''nupinAVG[width1:width1//2*width1+1:2*width1] = 1
+    ndowninAVG[-width2//2*width2:-width2:2*width2] = 1'''
+    
+    nupinAVG[-1] = 1
+    ndowninAVG[0] = 1
     
     
     
@@ -94,20 +103,33 @@ if __name__ == '__main__':
     plt.vlines(ef, np.min(dosdown),np.max(dosup))
     plt.legend()
     
-    plt.figure()
-    plt.title("w1 = {}, w2={}. Energy = {} (units of $t$)".format(width1,width2, round(Energy,4)))
-    plt.scatter(xmats,ymats,10,c="k",marker="x")
-
+    fig, ax = plt.subplots()
+    #ax.set_title("w1 = {}, w2={}. Energy = {} (units of $t$)".format(width1,width2, round(Energy,4)))
+    ax.set_title("w = {}. Energy = {} (units of $t$)".format(width1, round(Energy,4)))
+    #plt.scatter(xmats,ymats,10,c="k",marker="x")
+    
+    midpoint = np.max(xmats)/2
+    window = 0.5
+    ax.set_xlim(midpoint*(1-window), midpoint*(1+window))
     
     color = nupout-ndownout
     size = nupout+ndownout
     
-    #print(np.min(size),np.max(size))
-    plt.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, cmap="bwr_r", vmin=-np.max(np.abs(color)), vmax=np.max(np.abs(color)),edgecolors='black') 
+    checkmax = []
+    for i,x in enumerate(xmats):
+        if x > midpoint*(1-window) and x < midpoint*(1+window):
+            checkmax.append(color[i])
     
+    #print(np.min(size),np.max(size))
+    im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = np.min(checkmax), vmax = np.max(checkmax), cmap="bwr_r", edgecolors='black') 
+    #im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = -np.max(np.abs(checkmax)), vmax = np.max(np.abs(checkmax)), cmap="bwr_r", edgecolors='black') 
     #alpha=np.maximum(np.abs(color/np.max(np.abs(color)+0.000001)),0.3*np.ones(len(color)))
     
-    plt.colorbar()
+        
+        
+    cbar = fig.colorbar(im, ax=ax)
+    
+
     plt.xlabel('x(nm)')
     plt.ylabel('y(nm)')
     

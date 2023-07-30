@@ -10,9 +10,9 @@ def fdstat(e,ef,KbT):
     return 1/(np.exp((e-ef)/KbT)+1)
 
 
-def HubbardHam_AGNR(Htb, nupAVG, ndownAVG, U):
-    Hup = U*np.diag(ndownAVG) + Htb
-    Hdown = U*np.diag(nupAVG) + Htb
+def HubbardHam_AGNR(Htb, nupAVG, ndownAVG, U, Bfield=0):
+    Hup = U*np.diag(ndownAVG) + Htb + Bfield*np.diag(np.ones(len(nupAVG)))
+    Hdown = U*np.diag(nupAVG) + Htb - Bfield*np.diag(np.ones(len(ndownAVG)))
     
     return Hup, Hdown
 
@@ -118,11 +118,13 @@ def fermifunc(nel, spinup, spindown, eup, edown, KbT, initialguess = 1, maxiter=
 '''
 
 
-def SCF_Loop(Htb, nupAVG,ndownAVG, U, KbT, nel, alpha, precission = 1e-6, maxiter=5e2, V=0., xmat=np.empty(1), ymat=np.empty(1), printea = True, halffilled=False, iguessEf=1, Umatrix=False, symmetricpotential=False):
+def SCF_Loop(Htb, nupAVG,ndownAVG, U, KbT, nel, alpha, precission = 1e-6, maxiter=5e2, V=0., xmat=np.empty(1), ymat=np.empty(1), printea = True, Bfield = 0, halffilled=False, iguessEf=1, Umatrix=False, symmetricpotential=False):
     
     if V != 0.: 
-        if type(U) is float: #this is to simulate (i guess) a potentiel gradient along the x direction
-            Htb2 = Htb+np.diag(V*xmat)
+        if type(V) is float: #this is to simulate (i guess) a potentiel gradient along the x direction
+            if symmetricpotential: 
+                Htb2 = Htb+np.diag(V*xmat) + np.diag(V*xmat[::-1])
+            else: Htb2 = Htb+np.diag(V*xmat)
         else: # V = [Q, Origin] (origin = distance from leftmost edge)
             charge = V[0]
             xorigin, yorigin = V[1]
@@ -151,7 +153,7 @@ def SCF_Loop(Htb, nupAVG,ndownAVG, U, KbT, nel, alpha, precission = 1e-6, maxite
         #if Umatrix:
         #    Hup, Hdown = HubbardHam_AGNR_UMatrix(Htb2,nupAVG,ndownAVG,U)
         #else:
-        Hup, Hdown = HubbardHam_AGNR(Htb2,nupAVG,ndownAVG,U)
+        Hup, Hdown = HubbardHam_AGNR(Htb2,nupAVG,ndownAVG,U, Bfield=Bfield)
         psiupout = eigh(Hup) #REMEMBER TO TRANSPOSE DE EIGENVECTORS
         psidownout = eigh(Hdown)
         
@@ -173,16 +175,18 @@ def SCF_Loop(Htb, nupAVG,ndownAVG, U, KbT, nel, alpha, precission = 1e-6, maxite
         
 if __name__ == '__main__':
     cc = 0.142
-    width = 19
-    length = 40
+    width = 25
+    length = 20
     t=-1
     U=1.2*np.abs(t)#1.2*np.abs(t)
     nel = 2*width*length
     
     matxyz,xmat,ymat =  GrapheGENEArmchair(width,length,0.142)
     
+    B=-1e-6
+    
     Q =0#0.5
-    Origin = (-10,(np.max(ymat)+np.min(ymat))/2)
+    Origin = (-1,(np.max(ymat)+np.min(ymat))/2)
     Vpotential = [Q,Origin] #0
 
     KbT = np.abs(t*1e-3) 
@@ -198,22 +202,22 @@ if __name__ == '__main__':
     es, dist = eigh(Htb)
     ESdist = np.transpose(dist)[width*length-Nedgestates:width*length]
 
-    nupinAVG = 0.5*np.zeros(nel).reshape((width,2*length))
-    ndowninAVG = 0.5*np.zeros(nel).reshape((width,2*length))
+    '''nupinAVG = 0.5*np.ones(nel).reshape((width,2*length))
+    ndowninAVG = 0.5*np.ones(nel).reshape((width,2*length))
     
-    '''for i,state in enumerate(ESdist):
+    for i,state in enumerate(ESdist):
         state = state.reshape(width,2*length)
-        if  not i%2:
-            nupinAVG[:,length:] += np.abs(state)[:,length:]**2
-            ndowninAVG[:,:length] += np.abs(state)[:,:length]**2
-            nupinAVG[:,:length] -= np.abs(state)[:,:length]**2
-            ndowninAVG[:,length:] -= np.abs(state)[:,length:]**2
+        if not i%2:
+            nupinAVG[:,length:] += np.abs(state)[:,length:]
+            ndowninAVG[:,:length] += np.abs(state)[:,:length]
+            nupinAVG[:,:length] -= np.abs(state)[:,:length]
+            ndowninAVG[:,length:] -= np.abs(state)[:,length:]
             print("State ", i, " down left.")
         else:
-            nupinAVG[:,:length] += np.abs(state)[:,:length]**2
-            ndowninAVG[:,length:] += np.abs(state)[:,length:]**2
-            nupinAVG[:,length:] -= np.abs(state)[:,length:]**2
-            ndowninAVG[:,:length] -= np.abs(state)[:,:length]**2
+            nupinAVG[:,:length] += np.abs(state)[:,:length]
+            ndowninAVG[:,length:] += np.abs(state)[:,length:]
+            nupinAVG[:,length:] -= np.abs(state)[:,length:]
+            ndowninAVG[:,:length] -= np.abs(state)[:,:length]
             print("State ", i, " up left.")'''
     
     '''nupinAVG = 0.55*np.ones(nel).reshape((width,2*length))
@@ -236,36 +240,33 @@ if __name__ == '__main__':
     nupinAVG = np.abs(left)
     ndowninAVG = np.abs(right)'''
     
-    '''
+    
     nupinAVG = np.zeros(nel).reshape((width,2*length))
     ndowninAVG = np.zeros(nel).reshape((width,2*length))
     
-    '''
     
-    '''nupinAVG[1::8,0] = 1
+    
+    nupinAVG[1::8,0] = 1
     nupinAVG[3::8,0] = 1
     ndowninAVG[5::8,0] = 1
     ndowninAVG[7::8,0] = 1
-    #nupinAVG[1::2,-1] = 1
-    nupinAVG[1::8,-1] = 1
-    nupinAVG[3::8,-1] = 1
-    ndowninAVG[5::8,-1] = 1
-    ndowninAVG[7::8,-1] = 1'''
+    ndowninAVG[1::8,-1] = 1
+    ndowninAVG[3::8,-1] = 1
+    nupinAVG[5::8,-1] = 1
+    nupinAVG[7::8,-1] = 1
     
     ''' nupinAVG[1::2,0] = 1
     ndowninAVG[1::2,-1] = 1'''
     
-    nupinAVG[1,0] = 1
+    '''nupinAVG[1,0] = 1
     nupinAVG[width//2-1,0] = 1
     nupinAVG[-2,-1] = 1
     
     ndowninAVG[1,-1] = 1
     ndowninAVG[width//2-1,-1] = 1
-    ndowninAVG[-2,-1] = 1
+    ndowninAVG[-2,-1] = 1'''
     
     tot = np.sum(nupinAVG+ndowninAVG)
-
-    #print("tot=",tot)
     
     nupinAVG = (nupinAVG.flatten())*nel/tot   
     ndowninAVG = (ndowninAVG.flatten())*nel/tot 
@@ -273,7 +274,7 @@ if __name__ == '__main__':
 
     Htb = TB_HamArmchair_finite(width,length,0,t)
     init_time = time.time()
-    nupout, ndownout, ef, Htb2 = SCF_Loop(Htb, nupinAVG,ndowninAVG, U, KbT, nel, alpha, precission=1e-4, V= Vpotential, xmat=np.array(xmat).flatten(), printea=True, symmetricpotential=True)
+    nupout, ndownout, ef, Htb2 = SCF_Loop(Htb, nupinAVG,ndowninAVG, U, KbT, nel, alpha, precission=1e-4, V= Vpotential, xmat=np.array(xmat).flatten(), printea=True, symmetricpotential=True, Bfield=B)
     Hup, Hdown = HubbardHam_AGNR(Htb2,nupout,ndownout,U)
 
     

@@ -33,9 +33,9 @@ def edgespingi(E,POS, eigenergiesup, eigstatesup, eigenergiesdown, eigstatesdown
     sumup = 0
     sumdown = 0
     for ie in range(len(eigenergiesup)):
-        for cup,cdown in zip(eigstatesup,eigstatesdown):#CHANGE THIS
-            sumup += np.abs(eigstatesup.flatten()[2*length*(1+2*POS)])**2*np.exp(-0.5*((E-eigenergiesup[ie])/sigma)**2)
-            sumdown += np.abs(eigstatesdown.flatten()[2*length*(1+2*POS)])**2*np.exp(-0.5*((E-eigenergiesdown[ie])/sigma)**2)
+        #for cup,cdown in zip(eigstatesup,eigstatesdown):#CHANGE THIS
+        sumup += np.abs(eigstatesup.flatten()[2*length*(1+2*POS)])**2*np.exp(-0.5*((E-eigenergiesup[ie])/sigma)**2)
+        sumdown += np.abs(eigstatesdown.flatten()[2*length*(1+2*POS)])**2*np.exp(-0.5*((E-eigenergiesdown[ie])/sigma)**2)
     
     return sumup, sumdown
 
@@ -44,13 +44,13 @@ def edgespingi(E,POS, eigenergiesup, eigstatesup, eigenergiesdown, eigstatesdown
 if __name__ == "__main__":
     cc = 0.142
     width = 25
-    length = 15
+    length = 40
     t=-1
     U=1.2*np.abs(t)
     nel = 2*width*length
     
     KbT = np.abs(t*1e-3) 
-    alpha = 0.8
+    alpha = 0.3
     
     Htb = TB_HamArmchair_finite(width,length,0,t)
     
@@ -68,8 +68,8 @@ if __name__ == "__main__":
     
     matxyz,xmat,ymat =  GrapheGENEArmchair(width,length,0.142)
     init_time = time.time()
-    nupout, ndownout, ef = SCF_Loop(Htb, nupinAVG,ndowninAVG, U, KbT, nel, alpha, precission=1e-3, V= 0, xmat=np.array(xmat).flatten())
-    Hup, Hdown = HubbardHam_AGNR(Htb,nupout,ndownout,U)
+    nupout, ndownout, ef, Htb2 = SCF_Loop(Htb, nupinAVG,ndowninAVG, U, KbT, nel, alpha, precission=1e-3, V= 0, xmat=np.array(xmat).flatten())
+    Hup, Hdown = HubbardHam_AGNR(Htb2,nupout,ndownout,U)
     
     
     psiup = eigh(Hup)

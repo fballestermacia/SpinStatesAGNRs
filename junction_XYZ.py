@@ -3,7 +3,7 @@ from TB_GNR import GrapheGENEArmchair
 
 
 
-def junction_xyz(width1,length1,width2,length2,cc, centered = False):
+def junction_xyz(width1,length1,width2,length2,cc, centered = False, three = False):
     
 
     matxyz1, xmat1,ymat1 =  GrapheGENEArmchair(width1,length1,cc)
@@ -27,19 +27,35 @@ def junction_xyz(width1,length1,width2,length2,cc, centered = False):
     xmat3 = np.append(xmat1,xmat2-np.min(xmat2)+np.max(xmat1)+cc)
     ymat3 = np.append(ymat1,np.array(ymat2)+yvalue)
     
+    if three:
+        yvalue = 0
+        if centered:
+            if impar:
+                for i in range(width2)[::-1]:
+                    xmat3 = np.delete(xmat3,(2*length2-1)*(i+1)+2*width1*length1-1)
+                    ymat3 = np.delete(ymat3,(2*length2-1)*(i+1)+2*width1*length1-1)
+                    
+            else:
+                pass
+         
+        
+        xmat3 = np.append(xmat3,xmat1-np.min(xmat1)+np.max(xmat3)+cc)
+        ymat3 = np.append(ymat3,np.array(ymat1)+yvalue)
+        
+    
     return np.transpose(np.array([xmat3,ymat3])), xmat3, ymat3
 
 
 
 if __name__=='__main__':
     cc = 0.142
-    width1 = 13 
+    width1 =7 
     length1 = 10 
     
     width2 = 7
-    length2 = 5
+    length2 = 10
     
-    matxyz, xmat, ymat = junction_xyz(width1,length1,width2,length2,cc*10, centered = True)
+    matxyz, xmat, ymat = junction_xyz(width1,length1,width2,length2,cc*10, centered = False, three=True)
     with open('pruebajunction2.xyz', 'w') as f:
         f.write(str(len(xmat))+"\n")
         f.write("AGNR with a junction\n")
