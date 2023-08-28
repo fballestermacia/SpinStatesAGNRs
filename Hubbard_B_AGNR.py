@@ -18,13 +18,13 @@ if __name__ == '__main__':
     U=1.2*np.abs(t)
     
     width = 7
-    length = 30
+    length = 31
     V = -np.abs(t)*1.42#1.42
     sigma = 0.15#0.15
     
     matxyz,xmat,ymat =  GrapheGENEArmchair(width,length,cc)
     
-    borindexes = [width*length-2, width*length+1]
+    borindexes = [width*length-1]#, width*length]
     borposx = np.zeros(len(borindexes))
     borposy = np.zeros(len(borindexes))
     

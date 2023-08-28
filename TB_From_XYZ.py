@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from TB_GNR import GrapheGENEArmchair, lorentzian
+from TB_GNR import GrapheGENEArmchair, lorentzian, TB_HamArmchair_infinite
 from junction_XYZ import junction_xyz
+from GNR_xyz import GrapheGENEHaiku
 from scipy.linalg import eigh, eigvalsh
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -26,7 +27,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 
-def TB_From_XYZ(U,t,cc,matxyz): #cc in nanometers
+def TB_From_XYZ(U,t,cc,matxyz, printea=True): #cc in nanometers
     natoms = len(matxyz)
     
     Htb = np.diag(U/2*np.ones(natoms))
@@ -37,7 +38,7 @@ def TB_From_XYZ(U,t,cc,matxyz): #cc in nanometers
             dist = np.linalg.norm(currentxyx-np.array(matxyz[neighbour]))
             if np.isclose(dist,cc): 
                 Htb[current_site,neighbour] = t
-        printProgressBar(current_site+1,natoms, prefix="Consructing T-B Hamiltonian")
+        if printea:printProgressBar(current_site+1,natoms, prefix="Consructing T-B Hamiltonian")
     
     Htb += np.transpose(Htb)
     
@@ -49,18 +50,44 @@ if __name__ == '__main__':
     Utb = 0
     cc = 0.142
     
-    width1 = 25
-    length1 = 20
-    width2 = 13
-    length2 = 5
+    width1 = 7
+    length1 = 19
+    width2 = 7
+    length2 = 1
     
-    matxyz,xmat,ymat =  junction_xyz(width1,length1,width2,length2,cc, centered = True)
+    centered = True
+    
+    matxyz,xmat,ymat =  junction_xyz(width1,length1,width2,length2,cc, centered = centered, three=True) #GrapheGENEHaiku(length1,cc)
+    
+    delpos = 129
+    matxyz = np.delete(matxyz,delpos, axis = 0)
+    xmat = np.delete(xmat,delpos)
+    ymat = np.delete(ymat,delpos)
+    
+    delpos = 140
+    matxyz = np.delete(matxyz,delpos, axis = 0)
+    xmat = np.delete(xmat,delpos)
+    ymat = np.delete(ymat,delpos)
+    
     Htbfrommat = TB_From_XYZ(Utb,t,cc,matxyz)
     
+    print(len(xmat), ' electrons')
+    
+    energies = eigvalsh(TB_HamArmchair_infinite(np.max([width1,width2]),Utb,t,0))
+
+    bands = np.sort(energies)
+    halfgap = np.min(np.abs(bands))
+    
+    NES = 0
     
     eigvalsf, eigvect = eigh(Htbfrommat)
     
     eigvect = np.transpose(eigvect)
+    
+    for en in eigvalsf:
+        if np.abs(en) < halfgap: NES +=1
+    
+    print(NES, " Edge States")
     
     g = 0.02
     res = 3000
@@ -72,29 +99,77 @@ if __name__ == '__main__':
     
     plt.figure()
     plt.plot(xvals, dos/np.max(dos), 'k')
+    plt.vlines(halfgap, 0,1)
+    plt.vlines(-halfgap, 0,1)
     
     
-    indices = [0,1,2,3]
+    indices = np.arange(NES//2)
+    
     
     for indice in indices:
-        plt.figure()
-        plt.subplot(211)
-        plt.scatter(xmat,ymat,25,c="r")  
-        plt.title("w1 = {}, w2={}".format(width1,width2))
-        p =len(xmat)//2-1-indice
-        plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=np.square(np.abs(eigvect[p])))  
-        plt.xlabel('x(nm)')
-        plt.ylabel('y(nm)')
-        plt.ylim(-0.1,cc*width1)
-        
-        plt.subplot(212)
-        plt.scatter(xmat,ymat,25,c="r")  
-        plt.title("w1 = {}, w2={}".format(width1,width2))
-        p =len(xmat)//2+indice 
-        plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=np.square(np.abs(eigvect[p])))  
-        plt.xlabel('x(nm)')
-        plt.ylabel('y(nm)')
-        plt.ylim(-0.1,cc*width1)
-    
+        if NES%2:
+            plt.figure()
+            plt.subplot(311)
+            plt.scatter(xmat,ymat,10,c="k", marker='x')  
+            #plt.title("w1 = {}, w2={}".format(width1,width2))
+            plt.title("w = {}".format(width1))
+            p =len(xmat)//2-1-indice
+            print(eigvalsf[p])
+            plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=eigvect[p], cmap='bwr_r')  
+            #plt.xlabel('x(nm)')
+            plt.ylabel('y(nm)')
+            plt.ylim(-0.1+np.min(ymat),0.1+np.max(ymat))
+            plt.colorbar()
+            
+            plt.subplot(312)
+            plt.scatter(xmat,ymat,10,c="k", marker='x')   
+            #plt.title("w1 = {}, w2={}".format(width1,width2))
+            p =len(xmat)//2+1+indice
+            print(eigvalsf[p])
+            plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=eigvect[p], cmap='bwr_r')  
+            #plt.xlabel('x(nm)')
+            plt.ylabel('y(nm)')
+            plt.ylim(-0.1+np.min(ymat),0.1+np.max(ymat))
+            plt.colorbar()
+            
+            plt.subplot(313)
+            plt.scatter(xmat,ymat,10,c="k", marker='x')  
+            #plt.title("w1 = {}, w2={}".format(width1,width2))
+            p =len(xmat)//2+indice 
+            print(eigvalsf[p])
+            plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=eigvect[p], cmap='bwr_r')  
+            plt.xlabel('x(nm)')
+            plt.ylabel('y(nm)')
+            plt.ylim(-0.1+np.min(ymat),0.1+np.max(ymat))
+            plt.colorbar()
+        else:
+            plt.figure()
+            plt.subplot(211)
+            plt.scatter(xmat,ymat,10,c="k", marker='x')  
+            plt.title("w1 = {}, w2={}".format(width1,width2))
+            p =len(xmat)//2-1-indice
+            print(eigvalsf[p])
+            plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=eigvect[p], cmap='bwr_r')  
+            #plt.xlabel('x(nm)')
+            plt.ylabel('y(nm)')
+            plt.ylim(-0.1+np.min(ymat),0.1+np.max(ymat))
+            plt.colorbar()
+            
+            midpoint = np.max(xmat)/2
+            window = 0.5
+            #plt.xlim(midpoint*(1-window), midpoint*(1+window))
+            
+            plt.subplot(212)
+            plt.scatter(xmat,ymat,10,c="k", marker='x')   
+            #plt.title("w1 = {}, w2={}".format(width1,width2))
+            p =len(xmat)//2+indice
+            print(eigvalsf[p])
+            plt.scatter(xmat,ymat,s=np.square(np.abs(eigvect[p]))*100/np.max(np.square(np.abs(eigvect[p]))),c=eigvect[p], cmap='bwr_r')  
+            plt.xlabel('x(nm)')
+            plt.ylabel('y(nm)')
+            plt.ylim(-0.1+np.min(ymat),0.1+np.max(ymat))
+            plt.colorbar()
+            #plt.xlim(midpoint*(1-window), midpoint*(1+window))
+            
     
     plt.show()

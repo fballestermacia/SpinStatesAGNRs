@@ -12,16 +12,20 @@ from datetime import timedelta
 
 if __name__ == '__main__':
     cc = 0.142
-    width1 =9
-    length1 = 20
+    width1 =7
+    length1 = 19
     
-    width2 =7
-    length2 = 5
+    width2 = 7
+    length2 = 1
     
     t=-1
     U=1.2*np.abs(t)#1.2*np.abs(t)
     
-    matxyzs,xmats,ymats =  junction_xyz(width1, length1, width2, length2, cc, centered = True, three=True)
+    matxyzs,xmats,ymats =  junction_xyz(width1, length1, width2, length2, cc, centered = True, three=False)
+    
+    deletedX = []
+    deletedY = []
+    
     
     '''delposes = np.arange(length2*2)+width1*length1*2
     for delpos in delposes[::-1]:
@@ -29,15 +33,20 @@ if __name__ == '__main__':
         xmats = np.delete(xmats,delpos)
         ymats = np.delete(ymats,delpos)'''
         
-    '''delpos = 211
+    
+    delpos = 140
     matxyzs = np.delete(matxyzs,delpos, axis = 0)
+    deletedX.append(xmats[delpos])
+    deletedY.append(ymats[delpos])
     xmats = np.delete(xmats,delpos)
     ymats = np.delete(ymats,delpos)
     
-    delpos = 210
+    delpos = 130
     matxyzs = np.delete(matxyzs,delpos, axis = 0)
+    deletedX.append(xmats[delpos])
+    deletedY.append(ymats[delpos])
     xmats = np.delete(xmats,delpos)
-    ymats = np.delete(ymats,delpos)'''
+    ymats = np.delete(ymats,delpos)
     #matxyz,xmat,ymat =  GrapheGENEHaiku(length1,cc)
     
     Htb = TB_From_XYZ(0,t,cc,matxyzs)
@@ -58,8 +67,8 @@ if __name__ == '__main__':
     ndowninAVG[-width2//2*width2:-width2:2*width2] = 1'''
     
     nupinAVG[-1] = 1
+    #ndowninAVG[2*length1*17] = 1
     ndowninAVG[0] = 1
-    
     
     
     tot = np.sum(nupinAVG+ndowninAVG)
@@ -110,10 +119,14 @@ if __name__ == '__main__':
     
     midpoint = np.max(xmats)/2
     window = 0.5
-    ax.set_xlim(midpoint*(1-window), midpoint*(1+window))
+    #ax.set_xlim(midpoint*(1-window), midpoint*(1+window))
     
     color = nupout-ndownout
     size = nupout+ndownout
+    
+    ml = np.sum(color[:len(color)//2])
+    mr = np.sum(color[len(color)//2:])
+    print("m_l = ",ml, ' m_r = ', mr, ' m = ', ml+mr)
     
     checkmax = []
     for i,x in enumerate(xmats):
@@ -121,15 +134,16 @@ if __name__ == '__main__':
             checkmax.append(color[i])
     
     #print(np.min(size),np.max(size))
-    im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = np.min(checkmax), vmax = np.max(checkmax), cmap="bwr_r", edgecolors='black') 
-    #im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = -np.max(np.abs(checkmax)), vmax = np.max(np.abs(checkmax)), cmap="bwr_r", edgecolors='black') 
+    #im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = np.min(checkmax), vmax = np.max(checkmax), cmap="bwr_r", edgecolors='black') 
+    im = ax.scatter(xmats,ymats,s=size*100/np.max(size),c=color,alpha=1, vmin = -np.max(np.abs(checkmax)), vmax = np.max(np.abs(checkmax)), cmap="bwr_r", edgecolors='black') 
     #alpha=np.maximum(np.abs(color/np.max(np.abs(color)+0.000001)),0.3*np.ones(len(color)))
     
         
         
     cbar = fig.colorbar(im, ax=ax)
     
-
+    plt.scatter(deletedX,deletedY, s=90, c='g', marker='x')
+    
     plt.xlabel('x(nm)')
     plt.ylabel('y(nm)')
     

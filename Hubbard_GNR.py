@@ -175,7 +175,7 @@ def SCF_Loop(Htb, nupAVG,ndownAVG, U, KbT, nel, alpha, precission = 1e-6, maxite
         
 if __name__ == '__main__':
     cc = 0.142
-    width = 25
+    width = 19
     length = 20
     t=-1
     U=1.2*np.abs(t)#1.2*np.abs(t)
@@ -183,10 +183,10 @@ if __name__ == '__main__':
     
     matxyz,xmat,ymat =  GrapheGENEArmchair(width,length,0.142)
     
-    B=-1e-6
+    B=0#-1e-6
     
-    Q =0#0.5
-    Origin = (-1,(np.max(ymat)+np.min(ymat))/2)
+    Q =50#0.5
+    Origin = (-10,(np.max(ymat)+np.min(ymat))/2)
     Vpotential = [Q,Origin] #0
 
     KbT = np.abs(t*1e-3) 
@@ -202,10 +202,10 @@ if __name__ == '__main__':
     es, dist = eigh(Htb)
     ESdist = np.transpose(dist)[width*length-Nedgestates:width*length]
 
-    '''nupinAVG = 0.5*np.ones(nel).reshape((width,2*length))
+    nupinAVG = 0.5*np.ones(nel).reshape((width,2*length))
     ndowninAVG = 0.5*np.ones(nel).reshape((width,2*length))
     
-    for i,state in enumerate(ESdist):
+    '''for i,state in enumerate(ESdist):
         state = state.reshape(width,2*length)
         if not i%2:
             nupinAVG[:,length:] += np.abs(state)[:,length:]
@@ -249,11 +249,10 @@ if __name__ == '__main__':
     nupinAVG[1::8,0] = 1
     nupinAVG[3::8,0] = 1
     ndowninAVG[5::8,0] = 1
-    ndowninAVG[7::8,0] = 1
+    
     ndowninAVG[1::8,-1] = 1
     ndowninAVG[3::8,-1] = 1
     nupinAVG[5::8,-1] = 1
-    nupinAVG[7::8,-1] = 1
     
     ''' nupinAVG[1::2,0] = 1
     ndowninAVG[1::2,-1] = 1'''
@@ -293,6 +292,8 @@ if __name__ == '__main__':
     for eu,ed in zip(bandup,banddown):
         Energy += eu*fdstat(eu,ef,KbT) + ed*fdstat(ed,ef,KbT)
         #print(eu,ed,Energy)
+    Energy -= U*np.sum(nupout*ndownout)    
+    
     print("Fermi Energy = ", ef)
     print("Energy = ", Energy)      
 

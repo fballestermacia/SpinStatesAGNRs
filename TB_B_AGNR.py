@@ -23,7 +23,7 @@ if __name__ == '__main__':
     cc = 0.142
     
     width = 7
-    length = 21
+    length = 31
     V = 1.42*np.abs(t)
     sigma = 0.15
     
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     eigvect = np.transpose(eigvect)
     
     g = 0.02
-    res = 3000
+    res = 1000
     xvals = np.linspace(-3,3,res)
     dos = np.zeros(res)
 

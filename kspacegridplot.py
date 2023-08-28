@@ -7,10 +7,11 @@ def ftosolve(kx, ky, N, M, beta):
     fk = 1+2*np.cos(ky)*np.exp(1j*kx)
     return 2*M*kx+np.angle(fk)-beta*np.pi
     
-N = 41
-M = 100
+N = 7
+M = 2
 betas = np.arange(2*M)+1
-kys = np.pi/(N+1)*(np.arange((N+1/2))+1)
+kys = np.pi/(N+1)*(np.arange(((N+1)/2))+1)
+
 kxss = []
 for beta in betas:
     kxs = []
@@ -21,7 +22,7 @@ for beta in betas:
                 kxs.append(kx)
     kxss.append(np.array(kxs))
 
-kylinessmooth = np.linspace(0,np.pi/2,200)
+kylinessmooth = np.linspace(0,np.pi/2,500)
 kxsssmooth = []
 for beta in betas:
     kxs = []
@@ -33,15 +34,15 @@ for beta in betas:
 kxsssmooth = np.array(kxsssmooth)
 plt.figure()
 for b in betas:
-    plt.plot(kxsssmooth[b-1],kylinessmooth,'b')
+    plt.plot(kxsssmooth[b-1],kylinessmooth,'b', linewidth=3)
 for ky in kys[:-1]:
-    plt.plot([0,np.pi],[ky,ky],'r')
+    plt.plot([0,np.pi],[ky,ky],'r',linewidth=3)
 
-plt.plot([0,np.pi/2], [np.pi/2,np.pi/2],'r')
+plt.plot([0,np.pi/2], [np.pi/2,np.pi/2],'r',linewidth=3)
 
 for b in betas:
     
-    plt.scatter(kxss[b-1],kys[:(len(kxss[b-1]))],c='k',zorder=10)
+    plt.scatter(kxss[b-1],kys[:(len(kxss[b-1]))],c='k', s=40,zorder=10)
 
 plt.xlim(0,np.pi)
 plt.ylim(0,np.pi/2+1e-2)

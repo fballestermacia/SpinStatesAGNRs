@@ -42,6 +42,7 @@ def EnergyandDensity(Htb,nup,ndown,efs,U,KbT, width, length):
     Energy = 0
     for eu,ed in zip(bandup,banddown):
         Energy += eu*fdstat(eu,efs,KbT) + ed*fdstat(ed,efs,KbT)
+    Energy -= U*np.sum(nup*ndown) 
     
     dleft = np.sum(nup.reshape(width,2*length)[:,:length] + ndown.reshape(width,2*length)[:,:length])
     mleft = np.sum(nup.reshape(width,2*length)[:,:length] - ndown.reshape(width,2*length)[:,:length])
@@ -55,22 +56,22 @@ def EnergyandDensity(Htb,nup,ndown,efs,U,KbT, width, length):
 
 if __name__ == '''__main__''':
     cc = 0.142
-    width = 25
+    width = 19
     length = 20
     t=-1
     U=1.2*np.abs(t)
     nel = 2*width*length
     
     matxyz,xmat,ymat =  GrapheGENEArmchair(width,length,0.142)
-    Origin = (-1,(np.max(ymat)+np.min(ymat))/2)
+    Origin = (-10,(np.max(ymat)+np.min(ymat))/2)
     
     
 
     KbT = np.abs(t*1e-3) 
     alpha = 0.3
     
-    resq = 10
-    Bs = np.linspace(0,1e-4,resq)
+    resq = 40
+    Qs = np.linspace(0,5,resq)
     
     EP = np.empty(resq)
     EAP = np.empty(resq)
@@ -89,8 +90,8 @@ if __name__ == '''__main__''':
     
     
     printProgressBar(0,resq)
-    for qindex, B in enumerate(Bs):
-        #Vpotential = [Q,Origin]
+    for qindex, Q in enumerate(Qs):
+        Vpotential = [Q,Origin]
         
         alpha = 0.3
         
@@ -110,17 +111,15 @@ if __name__ == '''__main__''':
         nupinp[1::8,0] = 1
         nupinp[3::8,0] = 1
         nupinp[5::8,0] = 1
-        nupinp[7::8,0] = 1
         ndowninp[1::8,-1] = 1
         ndowninp[3::8,-1] = 1
         ndowninp[5::8,-1] = 1
-        ndowninp[7::8,-1] = 1
         
         tot = np.sum(nupinp+ndowninp)
         nupinp = (nupinp.flatten())/tot*nel
         ndowninp = (ndowninp.flatten())/tot*nel
                 
-        nupoutp, ndownoutp, efp, Htb2 = SCF_Loop(Htb, nupinp,ndowninp, U, KbT, nel, alpha,maxiter=1e2, precission=1e-4, xmat=np.array(xmat).flatten(), printea=False,Bfield=-B)
+        nupoutp, ndownoutp, efp, Htb2 = SCF_Loop(Htb, nupinp,ndowninp, U, KbT, nel, alpha,maxiter=1e2, precission=1e-4, xmat=np.array(xmat).flatten(), printea=False,V=Vpotential,symmetricpotential=True)
         printProgressBar(2*qindex+1,2*resq)
         
         ep,dleftp,drightp,mlp,mrp = EnergyandDensity(Htb2,nupoutp,ndownoutp,efp,U,KbT, width, length)
@@ -157,17 +156,16 @@ if __name__ == '''__main__''':
         nupinap[1::8,0] = 1
         nupinap[3::8,0] = 1
         ndowninap[5::8,0] = 1
-        ndowninap[7::8,0] = 1
+        
         ndowninap[1::8,-1] = 1
         ndowninap[3::8,-1] = 1
         nupinap[5::8,-1] = 1
-        nupinap[7::8,-1] = 1
         
         tot = np.sum(nupinap+ndowninap)
         nupinap = (nupinap.flatten())/tot*nel
         ndowninap  = (ndowninap.flatten())/tot*nel       
        
-        nupoutap, ndownoutap, efap, Htb2 = SCF_Loop(Htb, nupinap ,ndowninap , U, KbT, nel, alpha,maxiter=1e2, precission=1e-4, xmat=np.array(xmat).flatten(), printea=False,Bfield=B)
+        nupoutap, ndownoutap, efap, Htb2 = SCF_Loop(Htb, nupinap ,ndowninap , U, KbT, nel, alpha,maxiter=1e2, precission=1e-4, xmat=np.array(xmat).flatten(), printea=False,V=Vpotential,symmetricpotential=True)
         
         eap,dleftap,drightap, mlap, mrap = EnergyandDensity(Htb2,nupoutap,ndownoutap,efap,U,KbT,width,length)
         
@@ -219,7 +217,7 @@ if __name__ == '''__main__''':
         
         
         printProgressBar(2*qindex+2,2*resq)
-        print("\n B= ",B,' m = ',mlap)
+        print("\n Q= ",Q,' m = ',mlap)
     
     mids = (EP+EAP)/2
     
@@ -227,27 +225,27 @@ if __name__ == '''__main__''':
     
     plt.figure()
     plt.title("Energies. $r_0=${}".format(Origin))
-    plt.plot(Bs,EP,'b')
-    plt.plot(Bs,EAP,'r')
+    plt.plot(Qs,EP,'b')
+    plt.plot(Qs,EAP,'r')
     
     
     plt.figure()
     plt.title("Energy splitting. $r_0=${}".format(Origin))
-    plt.plot(Bs,EP-mids,'b')
-    plt.plot(Bs,EAP-mids,'r')
+    plt.plot(Qs,EP-mids,'b')
+    plt.plot(Qs,EAP-mids,'r')
     
     
     plt.figure()
     plt.title("Densities")
-    plt.plot(Bs,DLP,'b',label='DLP')
-    plt.plot(Bs,DLAP,'b--', label='DLAP')
-    plt.plot(Bs,DRP,'r',label='DRP')
-    plt.plot(Bs,DRAP,'r--', label='DRAP')
+    plt.plot(Qs,DLP,'b',label='DLP')
+    plt.plot(Qs,DLAP,'b--', label='DLAP')
+    plt.plot(Qs,DRP,'r',label='DRP')
+    plt.plot(Qs,DRAP,'r--', label='DRAP')
     
     plt.figure()
     plt.title("Magnetic moments")
-    plt.scatter(Bs,MP,c='b',label='MP')
-    plt.scatter(Bs,MAP,c='r', label='MAP')
+    plt.scatter(Qs,MP,c='b',label='MP')
+    plt.scatter(Qs,MAP,c='r', label='MAP')
     
     plt.show()
         
