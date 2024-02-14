@@ -3,7 +3,7 @@ for example, make .xyz files for molecule visualization - I recommend Jmol - or 
 Hubbard Hamiltonians for a Self-Consisten Field method. They are specific for Armchair Graphene Nanoribbons but with small
 tweaks can be used for other systems. All graphs in my work have been obtained with these scripts.
 
-The code is rough and not well documentes. I will work on cleaning it up as soon as possible.
+The code is rough and not well documented. I will work on cleaning it up as soon as possible.
 
 You may copy this code for your own personal use and modify it as you see fit.
 
